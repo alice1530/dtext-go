@@ -4,11 +4,36 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ .page_title }}</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <style>
+		 body {margin: 0;background: #ebeef1;}.container {position: absolute;top: 20px;right: 20px;bottom: 20px;left: 20px;}.content {font-size: 100%;margin: 0;padding: 20px;overflow-y: auto;resize: none;width: 100%;height: 100%;min-height: 100%;box-sizing: border-box;border: 1px #ddd solid;outline: none;white-space: pre-wrap;word-break: break-all;}@media (prefers-color-scheme: dark) {body {background: #383934;}.content {background: #282923;color: #f8f8f2;border: 0;}}@media print {.container {display: none;}}
+	</style>
 </head>
 <body>
     <div class="container">
         <pre class="content">{{ .page_content }}</pre>
     </div>
+	<script>
+		var content=document.getElementsByClassName('content')[0];
+		content.ondblclick=()=>{
+			event.preventDefault();
+			if (document.queryCommandSupported && document.queryCommandSupported('copy')) {
+				var text=content.innerHTML;
+				if (text.length>0){
+					var confirmation = confirm("是否复制到剪切板？");
+					if (confirmation == true) {
+						  var textArea = document.createElement("textarea");
+						  textArea.value = text;
+						  textArea.style.position = "fixed";
+						  textArea.style.opacity  = "0";
+						  document.body.appendChild(textArea);
+						  textArea.select();
+						  document.execCommand("copy");
+						  document.body.removeChild(textArea);
+					}
+				}
+			}
+			location.reload();
+		}
+	</script>
 </body>
 </html>
