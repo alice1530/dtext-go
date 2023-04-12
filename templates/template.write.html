@@ -5,41 +5,196 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ .page_title }}</title>
 	<style>
-		 body {margin: 0;background: #ebeef1;}.container {position: absolute;top: 20px;right: 20px;bottom: 20px;left: 20px;}.content {font-size: 100%;margin: 0;padding: 20px;overflow-y: auto;resize: none;width: 100%;height: 100%;min-height: 100%;box-sizing: border-box;border: 1px #ddd solid;outline: none;white-space: pre-wrap;word-break: break-all;}@media (prefers-color-scheme: dark) {body {background: #383934;}.content {background: #282923;color: #f8f8f2;border: 0;}}@media print {.container {display: none;}}
+			body {
+                margin: 0;
+                background: #ebeef1;
+            }
+
+            .container {
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                bottom: 65px;
+                left: 20px;
+            }
+
+            .content {
+                font-size: 100%;
+                margin: 0;
+                padding: 20px;
+                overflow-y: auto;
+                resize: none;
+                width: 100%;
+                height: 100%;
+                min-height: 100%;
+                box-sizing: border-box;
+                border: 1px #ddd solid;
+                outline: none;
+                white-space: pre-wrap;
+                word-break: break-all;
+            }
+
+            @media (prefers-color-scheme: dark) {
+                body {
+                    background: #383934;
+                }
+
+                .content {
+                    background: #282923;
+                    color: #f8f8f2;
+                    border: 0;
+                }
+            }
+
+            @media print {
+                .container {
+                    display: none;
+                }
+            }
+
+            .button {
+                display: inline-block;
+                border: 1px solid #ccc;
+                background-color: #f5f5f5;
+                padding: 10px 20px;
+                font-size: 16px;
+                text-align: center;
+                text-decoration: none;
+                cursor: pointer;
+                color: #333;
+            }
+
+            .button:hover {
+                background-color: #ebebeb;
+            }
+
+            .menubar {
+                display: flex;
+                flex-wrap: nowrap;
+                flex-direction: row;
+                justify-content: flex-end;
+            }
 	</style>
 </head>
-<body>
+<body>	
     <div class="container">
+		<div class="menubar">
+			<a href="javascript:void(0)" class="button" id="btn"></a>
+			<a href="javascript:void(0)" class="button" id="cpbtn">复制文本</a>
+		</div>
         <textarea id="content" class="content">{{ .page_content }}</textarea>
         <script >
+				var timeout = 5000;
+				var tout = null;
+				var ts=null;
+				var textarea = document.getElementById('content');
+				var btn = document.getElementById('btn');
+				var cpbtn = document.getElementById('cpbtn');
+				var content = textarea.value;
+				var $toast = null;
+				window.onload=()=>{
+					//<div id="toast"></div>
+					var tdiv = document.createElement("div");
+					tdiv.style.setProperty("display","none");
+					tdiv.style.setProperty("position","fixed");
+					tdiv.style.setProperty("bottom","50%");
+					tdiv.style.setProperty("left","50%");
+					tdiv.style.setProperty("transform","translateX(-50%)");
+					tdiv.style.setProperty("padding","10px");
+					tdiv.style.setProperty("background-color","rgba(0, 0, 0, 0.8)");
+					tdiv.style.setProperty("color","#fff");
+					tdiv.style.setProperty("border-radius","5px");
+					tdiv.style.setProperty("z-index","9999");
+					$toast=tdiv;
+					document.body.appendChild(tdiv);					
+					btn.click();
+					
+				}
+				function showToast(msg,timeout=3000) {
+					if (ts){clearTimeout(ts)}					
+					$toast.innerHTML = msg;
+					$toast.style.display = 'block';
+					ts = setTimeout(() => {$toast.style.display = 'none';},timeout);
+				}
+				cpbtn.onclick=()=>{
+					if (document.queryCommandSupported && document.queryCommandSupported('copy')) {
+						var text=textarea.value;
+						if (text.length>0){
+							//var confirmation = confirm("是否复制到剪切板？");
+							//if (confirmation == true) {
+								  var textArea = document.createElement("textarea");
+								  textArea.value = text;
+								  textArea.style.position = "fixed";
+								  textArea.style.opacity  = "0";
+								  document.body.appendChild(textArea);
+								  textArea.select();
+								  document.execCommand("copy");
+								  document.body.removeChild(textArea);
+								  showToast('已复制成功！')
+							//}
+						}
+					}else{
+								  showToast('当前环境部支持复制功能')
+					}
+				}
+				
+				btn.onclick=()=>{
+					textarea.toggleAttribute('readonly');
+					if (textarea.hasAttribute('readonly')){
+						textarea.style.setProperty('background','#ebeef1');
+						showToast('只读模式');
+						btn.textContent = '编辑模式';
+						textarea.removeEventListener('blur', textareaOnblur);
+						textarea.removeEventListener('keydown', textareaOnkeydown);
+						textarea.addEventListener('dblclick', textareaOndblclick);
+						if (tout){clearTimeout(tout)}
+					}else{
+						textarea.style.removeProperty('background');
+						showToast('编辑模式');
+						btn.textContent = '只读模式';
+						textarea.addEventListener('blur', textareaOnblur);
+						textarea.addEventListener('keydown', textareaOnkeydown);						
+						textarea.removeEventListener('dblclick', textareaOndblclick);
+						uploadContent()
+						textarea.focus()
+					}					
+				}				
+				
 				function uploadContent() {
+					//showToast(timeout)
+					if (tout){clearTimeout(tout)}
 					if (content !== textarea.value) {
 						var temp = textarea.value;
+						if (temp.length == 0)
+							temp=' ';
 						var request = new XMLHttpRequest();
 						request.open('POST', window.location.href, true);
-						//console.log(window.location.href)
+						//showToast(window.location.href)
 						request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
 						request.onload = function() {
 							if (request.readyState === 4) {
 								content = temp;
-								setTimeout(uploadContent, timeout);
+								tout = setTimeout(uploadContent, timeout);
+								showToast('自动保存成功！')
 							}
 						}
 						request.onerror = function() {
-							setTimeout(uploadContent, timeout);
+							tout = setTimeout(uploadContent, timeout);
+							showToast('网络错误,请刷新页面')
 						}
+						request.ontimeout = function() {
+							tout = setTimeout(uploadContent, timeout);
+							showToast('请求超时！')
+						};
 						request.send('msg=' + encodeURIComponent(temp));
-					}
-					else {
-						setTimeout(uploadContent, timeout);
+					}else {
+						tout = setTimeout(uploadContent, timeout);
 					}
 				}
-				var timeout = 5000;
-				var textarea = document.getElementById('content');
-				var content = textarea.value;
-				textarea.onkeydown =  () => {
+				
+				const textareaOnkeydown=()=> {
 				  if(event.code !== "Tab") return true;
-				  console.log('on key down: ', event.code)
+				  //showToast('on key down: ', event.code)
 				  event.preventDefault();
 				  let start = this.selectionStart;
 				  let end = this.selectionEnd;
@@ -53,18 +208,21 @@
 					let lineBreakCount = strBetween.split('\n').length;
 					let newStart = start + 2;
 					let newEnd = end + (lineBreakCount + 1)*2;
-
 					this.setSelectionRange(curLineStart,end);
 					document.execCommand("insertText",false,newStr);
 					this.setSelectionRange(newStart,newEnd);
 				  }
 				}
-			textarea.onblur=()=>{
-				event.preventDefault();
-				uploadContent();
-			}
-			textarea.focus();
-			uploadContent();
+				
+				const textareaOnblur=()=>{
+					event.preventDefault();
+					uploadContent();
+				}
+				
+				const textareaOndblclick=()=>{
+					event.preventDefault();
+					location.reload();
+				}
 		</script>
     </div>
 </body>
