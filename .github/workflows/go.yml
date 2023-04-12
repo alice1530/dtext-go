@@ -20,14 +20,3 @@ jobs:
         go-version: 1.19
     - name: Build
       run: go build -o dtext
-      
-  build-win:
-    runs-on: windows-latest
-    steps:
-    - uses: actions/checkout@v3
-    - name: Set up Go
-      uses: actions/setup-go@v3
-      with:
-        go-version: 1.19
-    - name: Build
-      run: go build -o dtext.exe
